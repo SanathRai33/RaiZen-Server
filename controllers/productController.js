@@ -16,31 +16,40 @@ const createProduct = async (req, res) => {
 
 // GET all products or filtered by search
 const getAllProducts = async (req, res) => {
-  const { search } = req.query;
+  const { search, brand, min, max } = req.query;
 
   try {
     let query = {};
 
     if (search) {
-      const regex = new RegExp(search, "i"); // case-insensitive match
+      const regex = new RegExp(search, "i");
+      query.$or = [
+        { name: { $regex: regex } },
+        { description: { $regex: regex } },
+        { category: { $regex: regex } },
+        { subCategory: { $regex: regex } }
+      ];
+    }
 
-      query = {
-        $or: [
-          { name: { $regex: regex } },
-          { category: { $regex: regex } },
-          { subCategory: { $regex: regex } },
-          { description: { $regex: regex } },
-          { price: +search || -1 },      // exact numeric match
-          { discount: +search || -1 }    // exact numeric match
-        ]
+    // Filter by brand (if present)
+    if (brand) {
+      const brandArray = brand.split(",");
+      query.brand = { $in: brandArray };
+    }
+
+    // Filter by price range
+    if (min || max) {
+      query.price = {
+        ...(min && { $gte: parseInt(min) }),
+        ...(max && { $lte: parseInt(max) }),
       };
     }
 
     const products = await Product.find(query);
     res.json(products);
   } catch (err) {
-    console.error("Search failed:", err);
-    res.status(500).json({ message: "Failed to fetch products." });
+    console.error("Error fetching products:", err);
+    res.status(500).json({ message: "Failed to fetch products" });
   }
 };
 
