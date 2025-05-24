@@ -1,0 +1,150 @@
+// controllers/productController.js
+const { get } = require("mongoose");
+const Product = require("../models/product");
+
+// CREATE product
+const createProduct = async (req, res) => {
+  try {
+    const { price, discount } = req.body;
+    const finalPrice = price - Math.floor(price * (discount / 100));
+    const product = await Product.create({ ...req.body, finalPrice });
+    res.status(201).json(product);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// GET all products or filtered by search
+const getAllProducts = async (req, res) => {
+  const { search } = req.query;
+
+  try {
+    let query = {};
+
+    if (search) {
+      const regex = new RegExp(search, "i"); // case-insensitive match
+
+      query = {
+        $or: [
+          { name: { $regex: regex } },
+          { category: { $regex: regex } },
+          { subCategory: { $regex: regex } },
+          { description: { $regex: regex } },
+          { price: +search || -1 },      // exact numeric match
+          { discount: +search || -1 }    // exact numeric match
+        ]
+      };
+    }
+
+    const products = await Product.find(query);
+    res.json(products);
+  } catch (err) {
+    console.error("Search failed:", err);
+    res.status(500).json({ message: "Failed to fetch products." });
+  }
+};
+
+
+// GET single product by ID
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// UPDATE product
+const updateProduct = async (req, res) => {
+  try {
+    const { price, discount } = req.body;
+    const finalPrice =
+      price && discount
+        ? price - Math.floor(price * (discount / 100))
+        : undefined;
+
+    const updateData =
+      finalPrice !== undefined ? { ...req.body, finalPrice } : req.body;
+
+    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(product);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// DELETE product
+const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ADD review
+const addReview = async (req, res) => {
+  try {
+    const { userId, username, rating, comment } = req.body;
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const review = { userId, username, rating, comment };
+    product.reviews.push(review);
+    product.numReviews = product.reviews.length;
+    product.ratings =
+      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      product.numReviews;
+
+    await product.save();
+    res.status(201).json({ message: "Review added successfully", product });
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+};
+
+// GET products with active offers (offerExpiresAt > now)
+const getActiveOffers = async (req, res) => {
+  try {
+    const now = new Date();
+    const offers = await Product.find({
+      offerExpiresAt: { $gt: now },
+    });
+    res.status(200).json(offers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET newly added products (last 3 days)
+const getNewArrivals = async (req, res) => {
+  try {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+    const newArrivals = await Product.find({
+      createdAt: { $gte: threeDaysAgo },
+    });
+    res.status(200).json(newArrivals);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = {
+  createProduct,
+  getProductById,
+  getAllProducts,
+  getActiveOffers,
+  getNewArrivals,
+  updateProduct,
+  deleteProduct,
+  addReview,
+};

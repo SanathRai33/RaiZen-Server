@@ -1,0 +1,14 @@
+# Ignore dependencies folder
+node_modules/
+
+# Ignore environment variables
+.env
+
+# Ignore logs and build files
+logs/
+*.log
+build/
+dist/
+
+# Ignore ulpoaded images
+uploads/
