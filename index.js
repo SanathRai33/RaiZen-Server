@@ -23,3 +23,6 @@ app.get('/', ( req, res) =>{
 
 const productRouter = require('./routes/productRouter');
 app.use('/products', productRouter);
+
+const userRouter = require('./routes/userRouter');
+app.use('/api/users', userRouter)
