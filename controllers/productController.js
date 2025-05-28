@@ -26,7 +26,7 @@ const getAllProducts = async (req, res) => {
       query.$or = [
         { name: { $regex: regex } },
         { description: { $regex: regex } },
-        { category: { $regex: regex } },
+        { category: { $in: [regex] } },
         { subCategory: { $regex: regex } }
       ];
     }
