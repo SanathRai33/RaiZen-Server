@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const Product = require('../models/product');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -201,23 +202,22 @@ const updateCart = async (req, res) => {
     const userId = req.params.id;
 
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     // Clear the old cart and replace it with the new one
-    user.cart = cartItems.map(item => ({
+    user.cart = cartItems.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
       addedAt: new Date(),
     }));
 
     await user.save();
-    res.json({ message: 'Cart updated successfully', cart: user.cart });
+    res.json({ message: "Cart updated successfully", cart: user.cart });
   } catch (error) {
-    console.error('Error updating cart:', error.message);
-    res.status(500).json({ message: 'Failed to update cart' });
+    console.error("Error updating cart:", error.message);
+    res.status(500).json({ message: "Failed to update cart" });
   }
 };
-
 
 // Get All Carts
 const getAllCarts = async (req, res) => {
@@ -234,6 +234,43 @@ const getAllCarts = async (req, res) => {
   }
 };
 
+// ✅ Update Favorites (Wishlist)
+const updateWishlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const productId = req.params.id;
+
+    const index = user.wishlist.indexOf(productId);
+
+    if (index === -1) {
+      user.wishlist.push(productId); // Add to wishlist
+    } else {
+      user.wishlist.splice(index, 1); // Remove from wishlist
+    }
+
+    await user.save();
+
+    // ✅ Important: return just the updated wishlist array
+    res.status(200).json(user.wishlist);
+  } catch (error) {
+    console.error("Wishlist error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const getWishlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('wishlist');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.status(200).json(user.wishlist);
+  } catch (error) {
+    console.error('Wishlist fetch error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -244,4 +281,6 @@ module.exports = {
   getCart,
   getAllCarts,
   updateCart,
+  updateWishlist,
+  getWishlist,
 };
