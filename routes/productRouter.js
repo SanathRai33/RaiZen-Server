@@ -25,6 +25,6 @@ router.post('/:id/reviews', addReview);
 router.get('/filter/offer/products', getActiveOffers);
 
 // GET new arrivals (added within last 3 days)
-router.get('/filter/new-arrivals/products', getNewArrivals);
+router.get('/filter/new-arrivals', getNewArrivals);
 
 module.exports = router;

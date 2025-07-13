@@ -136,7 +136,7 @@ const getActiveOffers = async (req, res) => {
 const getNewArrivals = async (req, res) => {
   try {
     const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 53);
 
     const newArrivals = await Product.find({
       createdAt: { $gte: threeDaysAgo },
