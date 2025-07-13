@@ -122,9 +122,8 @@ const addReview = async (req, res) => {
 // GET products with active offers (offerExpiresAt > now)
 const getActiveOffers = async (req, res) => {
   try {
-    const now = new Date();
     const offers = await Product.find({
-      offerExpiresAt: { $gt: now },
+      discount: { $gt: 19 },
     });
     res.status(200).json(offers);
   } catch (err) {
