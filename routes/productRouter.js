@@ -22,7 +22,7 @@ router.delete('/:id', deleteProduct);
 router.post('/:id/reviews', addReview);
 
 // GET active products (products with active discounts)
-router.get('/filter/offer/products', getActiveOffers);
+router.get('/filter/offer', getActiveOffers);
 
 // GET new arrivals (added within last 3 days)
 router.get('/filter/new-arrivals', getNewArrivals);
