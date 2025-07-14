@@ -131,20 +131,23 @@ const getActiveOffers = async (req, res) => {
   }
 };
 
-// GET newly added products (last 3 days)
+// GET newly added products (last 7 days)
 const getNewArrivals = async (req, res) => {
   try {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 53);
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
 
     const newArrivals = await Product.find({
-      createdAt: { $gte: threeDaysAgo },
-    });
+      createdAt: { $gte: sevenDaysAgo }
+    }).sort({ createdAt: -1 }); // Optional: newest first
+
     res.status(200).json(newArrivals);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error("Error fetching new arrivals:", err);
+    res.status(500).json({ message: "Server Error", error: err.message });
   }
 };
+
 
 module.exports = {
   createProduct,
