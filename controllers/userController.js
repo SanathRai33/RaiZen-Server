@@ -204,12 +204,33 @@ const updateCart = async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Clear the old cart and replace it with the new one
-    user.cart = cartItems.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      addedAt: new Date(),
-    }));
+    const existingCart = user.cart || [];
+
+    // Create a map of existing products for quick access
+    const cartMap = new Map();
+    existingCart.forEach((item) => {
+      cartMap.set(item.productId.toString(), item); // Ensure string key
+    });
+
+    // Loop over incoming cart items
+    cartItems.forEach((newItem) => {
+      const prodId = newItem.productId.toString();
+      if (cartMap.has(prodId)) {
+        // If product exists, update quantity
+        cartMap.get(prodId).quantity += newItem.quantity;
+        cartMap.get(prodId).addedAt = new Date();
+      } else {
+        // If not in cart, add it
+        cartMap.set(prodId, {
+          productId: newItem.productId,
+          quantity: newItem.quantity,
+          addedAt: new Date(),
+        });
+      }
+    });
+
+    // Convert map back to array
+    user.cart = Array.from(cartMap.values());
 
     await user.save();
     res.json({ message: "Cart updated successfully", cart: user.cart });
@@ -218,6 +239,7 @@ const updateCart = async (req, res) => {
     res.status(500).json({ message: "Failed to update cart" });
   }
 };
+
 
 // Get All Carts
 const getAllCarts = async (req, res) => {
