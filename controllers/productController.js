@@ -124,6 +124,7 @@ const getActiveOffers = async (req, res) => {
   try {
     const offers = await Product.find({
       discount: { $gt: 19 },
+      offerExpiresAt: { $gt: new Date() }
     });
     res.status(200).json(offers);
   } catch (err) {
