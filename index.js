@@ -27,6 +27,9 @@ app.use('/products', productRouter);
 const userRouter = require('./routes/userRouter');
 app.use('/api/users', userRouter);
 
+const paymentRouter = require('./routes/paymentRouter');
+app.use('api/payment', paymentRouter)
+
 
 // const adminRouter = require('./routes/adminRouter');
 // app.use('/api/admins', userRouter);
